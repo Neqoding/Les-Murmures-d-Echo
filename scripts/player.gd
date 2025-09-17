@@ -5,27 +5,42 @@ extends CharacterBody2D
 @onready var visuals = $Visuels
 @onready var animation_player = $Visuels/Sprite_player/AnimationPlayer
 
+var is_attacking: bool = false #Variable d'état d'attaque
+
 # --- LOGIQUE DE DEPLACEMENT ---
 @warning_ignore("unused_parameter")
 func _physics_process(delta: float) -> void:
-	var direction = Input.get_axis("ui_left", "ui_right")
+	if not is_attacking:
+		var direction = Input.get_axis("ui_left", "ui_right")
 	
-	# Gestion des animations
-	if direction:
-		animation_player.play("walk")
-	else:
-		animation_player.play("idle")
+		# Gestion des animations
+		if direction:
+			animation_player.play("walk")
+		else:
+			animation_player.play("idle")
+		
+		# Gestion de la rotation
+		if direction > 0:
+			visuals.scale.x = 1
+		elif direction <0:
+			visuals.scale.x =-1
 	
-	# Gestion de la rotation
-	if direction > 0:
-		visuals.scale.x = 1
-	elif direction <0:
-		visuals.scale.x =-1
-	
-	#Gestion du mouvement
-	if direction:
-		velocity.x = direction * speed
-	else:
-		velocity.x = move_toward(velocity.x, 0, speed)
+		#Gestion du mouvement
+		if direction:
+			velocity.x = direction * speed
+		else:
+			velocity.x = move_toward(velocity.x, 0, speed)
 
+		# Gestion de l'attaque
+		if Input.is_action_just_pressed("attack") and not is_attacking:
+			print("Attack!")
+			is_attacking = true
+			velocity.x = 0
+			animation_player.play("attack")
+			
 	move_and_slide()
+
+
+func _on_animation_player_animation_finished(anim_name) -> void: #Signal de fin d'animation d'attaque
+	if anim_name == "attack":
+		is_attacking = false
